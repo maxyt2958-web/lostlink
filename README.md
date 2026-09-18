@@ -1,17 +1,20 @@
-# 🔍 AI-Powered Lost & Found Platform
+# 🔍 LostLink — AI-Powered Lost & Found Platform
 
 > A full-stack web application that uses **Google Gemini AI** to intelligently match lost items with found reports through multi-tier image and description analysis.
 
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue?logo=python)](https://python.org)
 [![Flask](https://img.shields.io/badge/Flask-3.0-black?logo=flask)](https://flask.palletsprojects.com)
-[![Gemini](https://img.shields.io/badge/Google%20Gemini-AI-orange?logo=google)](https://aistudio.google.com)
+[![Gemini](https://img.shields.io/badge/Google%20Gemini-1.5%20Flash-orange?logo=google)](https://aistudio.google.com)
 [![SQLite](https://img.shields.io/badge/Database-SQLite-lightblue?logo=sqlite)](https://sqlite.org)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 ---
 
 ## 📌 Overview
 
-The **AI Lost & Found Platform** helps communities reunite lost items with their owners by combining traditional metadata filtering with Google Gemini's vision and language capabilities. A user uploads a photo of a lost item and the system automatically compares it against all reported found items using a 3-tier AI pipeline.
+**LostLink** helps communities reunite lost items with their owners by combining structured metadata filtering with Google Gemini's vision and language capabilities.
+
+When someone **finds** an item, they upload a photo — Gemini automatically generates a detailed description. When someone **loses** an item, they upload their own photo and describe it — LostLink runs a **3-tier AI matching pipeline** comparing text descriptions, metadata, and images to return ranked results with a confidence score.
 
 ---
 
@@ -19,10 +22,10 @@ The **AI Lost & Found Platform** helps communities reunite lost items with their
 
 | Feature | Description |
 |---|---|
-| 🔐 User Auth | Register / login / logout with hashed passwords (per-user accounts) |
+| 🔐 User Auth | Register / login / logout with hashed passwords (PBKDF2-SHA256) |
 | 📦 Report Found | Upload up to 3 photos — Gemini auto-generates an item description |
 | 🔍 Search Lost | Upload a photo and AI matches it against all found reports |
-| 🧠 3-Tier Matching | Description similarity → Metadata → Visual image comparison |
+| 🧠 3-Tier AI Matching | Description similarity → Metadata → Visual image comparison |
 | 🗂 Browse & Filter | Paginated item grid with search, category, and status filters |
 | 📄 Item Detail | Full page with image gallery, AI description, and contact options |
 | ✅ Claim Tracking | Mark items as claimed to close the loop |
@@ -30,7 +33,7 @@ The **AI Lost & Found Platform** helps communities reunite lost items with their
 | ⚑ Flag System | Report suspicious listings; auto-flags after 3 community reports |
 | 👤 My Profile | Manage your reports with view counts and status tracking |
 | 🛡 Admin Panel | Stats dashboard, user management (ban/unban), item moderation |
-| 🚦 Rate Limiting | Per-route request limits to prevent spam and abuse |
+| 🚦 Rate Limiting | Per-route request limits to prevent spam and API abuse |
 | 📧 Email Alerts | Optional email notification on new messages (SMTP configurable) |
 
 ---
@@ -41,45 +44,48 @@ The **AI Lost & Found Platform** helps communities reunite lost items with their
 User uploads photo of lost item
         │
         ▼
-[Tier 1] Gemini generates description → compare with found item descriptions
-        │  (below threshold → skip)
+[Tier 1] Gemini generates description → semantic similarity with found items
+        │  score < 0.40 → skip candidate
         ▼
 [Tier 2] Metadata comparison → item type, color, brand, location
-        │  (below threshold → skip)
+        │  score < 0.35 → skip candidate
         ▼
-[Tier 3] Gemini Vision → visual similarity between images
+[Tier 3] Gemini Vision → visual similarity between the two images
+        │  score < 0.55 → skip candidate
+        ▼
+Confidence score = (description × 0.3) + (metadata × 0.3) + (image × 0.4)
         │
         ▼
-Confidence score = (desc × 0.3) + (meta × 0.3) + (image × 0.4)
+Results ranked highest confidence first
 ```
 
-Pre-filtering by item type before AI calls keeps API costs low.
+Pre-filtering by item type before AI calls keeps API costs low and results fast.
 
 ---
 
 ## 🗂 Project Structure
 
 ```
-lost-and-found-app/
-├── app.py                  # All routes, business logic, AI helpers
+lostlink/
+├── app.py                  # All routes, business logic, AI helper functions
 ├── models.py               # SQLAlchemy models: User, Item, ItemImage, Flag, Message
-├── config.py               # Loads settings from .env
+├── config.py               # Loads all settings from .env
 ├── requirements.txt        # Python dependencies
-├── .env.example            # Environment variable template
+├── .env.example            # Environment variable template (copy to .env)
 ├── .gitignore
 │
 ├── static/
-│   └── css/style.css       # Custom CSS (no Bootstrap)
+│   └── css/style.css       # Custom CSS — no Bootstrap, uses CSS variables
 │
 ├── templates/
-│   ├── base.html           # Shared layout
-│   ├── index.html          # Home page
-│   ├── browse.html         # Browse all found items
-│   ├── item_detail.html    # Single item detail page
-│   ├── report_found.html   # Report a found item
+│   ├── base.html           # Shared layout — nav, flash messages
+│   ├── index.html          # Home page with stats and recent items
+│   ├── browse.html         # Browse all found items with filters + pagination
+│   ├── item_detail.html    # Single item — image gallery, metadata, actions
+│   ├── report_found.html   # Report a found item (multi-image upload)
 │   ├── search_lost.html    # Search for a lost item
-│   ├── results.html        # AI match results
-│   ├── profile.html        # User profile & my items
+│   ├── results.html        # AI match results with confidence scores
+│   ├── profile.html        # User profile and their reported items
 │   ├── messages.html       # Inbox / sent messages
 │   ├── send_message.html   # Compose message
 │   ├── auth/
@@ -104,14 +110,14 @@ lost-and-found-app/
 ### Prerequisites
 
 - Python 3.9+
-- A [Google AI Studio](https://aistudio.google.com/app/apikey) account (free Gemini API key)
+- A free [Google AI Studio](https://aistudio.google.com/app/apikey) account for the Gemini API key
 
 ### Installation
 
 **1. Clone the repository**
 ```bash
-git clone https://github.com/YOUR_USERNAME/lost-and-found-app.git
-cd lost-and-found-app
+git clone https://github.com/sushruta08/lostlink.git
+cd lostlink
 ```
 
 **2. Create and activate a virtual environment**
@@ -132,9 +138,14 @@ pip install -r requirements.txt
 
 **4. Configure environment variables**
 ```bash
+# Windows
+copy .env.example .env
+
+# macOS / Linux
 cp .env.example .env
 ```
-Edit `.env` and fill in your Gemini API keys and a secret key.
+
+Open `.env` and fill in your Gemini API keys, Flask secret key, and admin credentials.
 
 **5. Run the application**
 ```bash
@@ -152,24 +163,26 @@ http://127.0.0.1:5000
 
 An admin account is automatically created on first run using credentials from `.env`.
 
-- Default: `admin` / `admin123` (change in `.env` before deploying)
+- Default username/password: set in your `.env` file (see `.env.example`)
 - Admin panel: `http://127.0.0.1:5000/admin`
+
+> ⚠️ Change the default admin password in `.env` before deploying publicly.
 
 ---
 
 ## ⚙️ Configuration
 
-All configuration is loaded from `.env`. Key variables:
+All configuration is loaded from `.env`. Copy `.env.example` to `.env` to get started.
 
 | Variable | Description |
 |---|---|
 | `GEMINI_TEXT_API_KEY` | Gemini API key for text/description tasks |
 | `GEMINI_IMAGE_API_KEY` | Gemini API key for vision/image tasks |
-| `FLASK_SECRET_KEY` | Random secret for session security |
+| `FLASK_SECRET_KEY` | Long random string for session security |
 | `ADMIN_USERNAME` | Admin account username |
 | `ADMIN_PASSWORD` | Admin account password |
 | `MAIL_USERNAME` | Gmail address for notifications (optional) |
-| `MAIL_PASSWORD` | Gmail app password (optional) |
+| `MAIL_PASSWORD` | Gmail app password — not your account password (optional) |
 
 ---
 
@@ -177,48 +190,55 @@ All configuration is loaded from `.env`. Key variables:
 
 | Layer | Technology |
 |---|---|
-| Backend | Python, Flask |
-| Auth | Flask-Login, Werkzeug |
-| Database | SQLite, SQLAlchemy |
+| Language | Python 3.9+ |
+| Web Framework | Flask 3.0 |
+| Database | SQLite + SQLAlchemy ORM |
+| Authentication | Flask-Login + Werkzeug (PBKDF2-SHA256) |
 | AI | Google Gemini 1.5 Flash |
 | Rate Limiting | Flask-Limiter |
 | Email | Flask-Mail |
-| Frontend | HTML, Jinja2, Custom CSS |
 | Image Processing | Pillow |
+| Frontend | HTML + Jinja2 + Custom CSS |
 
 ---
 
-## 📸 Screenshots
+## 🔒 Security
 
-> Add screenshots of your app here after running it.
-
----
-
-## 🔒 Security Notes
-
-- Passwords are hashed using Werkzeug's PBKDF2-SHA256
-- `.env` is gitignored — API keys are never committed
-- Rate limiting protects against brute force and abuse
-- Input validation on all forms
-- Admin-only routes protected by decorator
+- Passwords hashed with Werkzeug's PBKDF2-SHA256 (never stored in plaintext)
+- `.env` is gitignored — API keys and secrets never committed
+- Rate limiting on all sensitive routes (login, register, search, report)
+- Input validation on all forms (server-side)
+- Admin-only routes protected by a custom `admin_required` decorator
+- Path traversal prevention on file serving route
+- File upload restricted to image extensions only
 
 ---
 
-## 🚢 Deployment Notes
+## 🚢 Deployment
 
-For production:
-- Use **Gunicorn** instead of the Flask dev server
-- Switch to **PostgreSQL** for the database
+For production deployment:
+
+- Use **Gunicorn** as the WSGI server: `gunicorn app:app -w 4`
+- Switch to **PostgreSQL** for concurrent write support
+- Move uploads to **AWS S3** or similar cloud storage
+- Configure **Nginx** as a reverse proxy
+- Set up **HTTPS** via Let's Encrypt
 - Use a proper SMTP service (SendGrid, Mailgun) for emails
-- Set `debug=False` (already set)
-- Use a reverse proxy (Nginx) in front of Gunicorn
 
 ---
 
-## 📄 Documentation
+## 🗃 Database Schema
 
-A detailed project documentation PDF is included: `Lost_and_Found_App_Documentation.pdf`
+Five tables: `users`, `items`, `item_images`, `flags`, `messages`
+
+```
+users ──< items ──< item_images
+           └──< flags >── users
+
+users ──< messages >── users
+messages ──> items (optional)
+```
 
 ---
 
-*Built with Flask + Google Gemini AI*
+*Built with Python · Flask · Google Gemini AI*
