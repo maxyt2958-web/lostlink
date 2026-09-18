@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Messages{% endblock %}
+{% block content %}
+
+<div class="flex justify-between items-center mb-3">
+  <h2 class="font-black" style="font-size:1.35rem;letter-spacing:-.02em">Messages</h2>
+</div>
+
+<div class="tabs">
+  <a class="tab active" id="tab-inbox" onclick="showTab('inbox')">Inbox ({{ inbox|length }})</a>
+  <a class="tab" id="tab-sent"  onclick="showTab('sent')">Sent ({{ sent|length }})</a>
+</div>
+
+<div id="pane-inbox">
+  {% if inbox %}
+    <div class="msg-list">
+      {% for msg in inbox %}
+        <div class="msg-item {% if not msg.is_read %}unread{% endif %}">
+          <div class="msg-header">
+            <span class="msg-from">{{ msg.sender.username }}</span>
+            <span class="msg-time">{{ msg.created_at.strftime('%d %b %Y %H:%M') }}</span>
+          </div>
+          {% if msg.item %}
+            <div class="text-xs text-muted mb-1">Re: {{ msg.item.item_type }} — {{ msg.item.location | truncate(40) }}</div>
+          {% endif %}
+          <div class="msg-body">{{ msg.body }}</div>
+          <div class="mt-2">
+            <a href="{{ url_for('send_message', receiver_id=msg.sender_id) }}" class="btn btn-ghost btn-sm">Reply</a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="no-results"><div class="no-results-icon">📬</div><h3>Inbox is empty</h3></div>
+  {% endif %}
+</div>
+
+<div id="pane-sent" style="display:none">
+  {% if sent %}
+    <div class="msg-list">
+      {% for msg in sent %}
+        <div class="msg-item">
+          <div class="msg-header">
+            <span class="msg-from">To: {{ msg.receiver.username }}</span>
+            <span class="msg-time">{{ msg.created_at.strftime('%d %b %Y %H:%M') }}</span>
+          </div>
+          {% if msg.item %}
+            <div class="text-xs text-muted mb-1">Re: {{ msg.item.item_type }}</div>
+          {% endif %}
+          <div class="msg-body">{{ msg.body }}</div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="no-results"><div class="no-results-icon">📤</div><h3>No sent messages</h3></div>
+  {% endif %}
+</div>
+
+<script>
+function showTab(name) {
+  ['inbox','sent'].forEach(t => {
+    document.getElementById('pane-' + t).style.display = t === name ? '' : 'none';
+    document.getElementById('tab-' + t).classList.toggle('active', t === name);
+  });
+}
+</script>
+
+{% endblock %}

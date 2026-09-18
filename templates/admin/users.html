@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Admin — Users{% endblock %}
+{% block content %}
+
+<div class="admin-nav">
+  <a href="{{ url_for('admin_dashboard') }}">Overview</a>
+  <a href="{{ url_for('admin_users') }}" class="active">Users</a>
+  <a href="{{ url_for('admin_items') }}">All Items</a>
+</div>
+
+<div class="section-title">All Users ({{ users | length }})</div>
+<div class="card">
+  <div style="overflow-x:auto">
+    <table class="items-table">
+      <thead>
+        <tr><th>ID</th><th>Username</th><th>Email</th><th>Joined</th><th>Items</th><th>Role</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+          <tr>
+            <td class="text-muted">#{{ u.id }}</td>
+            <td><strong>{{ u.username }}</strong></td>
+            <td class="text-muted text-sm">{{ u.email }}</td>
+            <td class="text-muted text-sm">{{ u.created_at.strftime('%d %b %Y') }}</td>
+            <td>{{ u.items.count() }}</td>
+            <td>
+              {% if u.is_admin %}<span class="badge badge-purple">Admin</span>
+              {% elif u.is_banned %}<span class="badge badge-red">Banned</span>
+              {% else %}<span class="badge badge-green">Active</span>{% endif %}
+            </td>
+            <td>
+              {% if not u.is_admin %}
+                <form method="POST" action="{{ url_for('admin_ban_user', user_id=u.id) }}">
+                  <button class="btn btn-sm {% if u.is_banned %}btn-green{% else %}btn-red{% endif %}">
+                    {% if u.is_banned %}Unban{% else %}Ban{% endif %}
+                  </button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

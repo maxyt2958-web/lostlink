@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}Report Found Item{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div class="card-header">
+    <h2>📦 Report a Found Item</h2>
+    <p>Upload up to 3 photos — AI will describe the item automatically.</p>
+  </div>
+  <div class="card-body">
+    <form method="POST" enctype="multipart/form-data" action="{{ url_for('report_found') }}">
+
+      <div class="field">
+        <label>Photos <span class="req">*</span> <span class="text-muted text-xs">(up to 3)</span></label>
+        <div id="previewGrid" class="preview-grid" style="display:none"></div>
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="item_images" name="item_images" accept="image/*" multiple>
+          <div class="upload-icon">🖼️</div>
+          <div class="upload-text">Click or drag &amp; drop up to 3 photos</div>
+          <div class="upload-sub">PNG, JPG, GIF, WebP — max 16 MB each</div>
+        </div>
+      </div>
+
+      <hr class="divider">
+      <div class="section-label">Item Details</div>
+
+      <div class="field">
+        <label for="item_type">Category <span class="req">*</span></label>
+        <select id="item_type" name="item_type" required>
+          <option value="" disabled selected>Select a category…</option>
+          {% for t in item_types %}
+            <option value="{{ t }}" {% if entered_data.get('item_type') == t %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="color">Color</label>
+          <input type="text" id="color" name="color" placeholder="e.g. Blue, Silver" value="{{ entered_data.get('color','') }}">
+        </div>
+        <div class="field">
+          <label for="brand">Brand</label>
+          <input type="text" id="brand" name="brand" placeholder="e.g. Apple, Nike" value="{{ entered_data.get('brand','') }}">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="location">Where did you find it? <span class="req">*</span></label>
+        <input type="text" id="location" name="location" required
+               placeholder="e.g. Central Park Bench, Library Room 201"
+               value="{{ entered_data.get('location','') }}">
+      </div>
+
+      <div class="field">
+        <label for="description">Additional Notes</label>
+        <textarea id="description" name="description" placeholder="Any other details that might help identify the item…">{{ entered_data.get('description','') }}</textarea>
+      </div>
+
+      <hr class="divider">
+      <div class="section-label">Contact</div>
+
+      <div class="field">
+        <label for="contact_info">Your Contact Info <span class="req">*</span></label>
+        <input type="text" id="contact_info" name="contact_info" required
+               placeholder="Email or phone number"
+               value="{{ entered_data.get('contact_info','') }}">
+        <p class="hint warn">⚠️ Shown to verified users who find a match.</p>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Submit Report →</button>
+    </form>
+  </div>
+</div>
+
+<script>
+const input = document.getElementById('item_images');
+const zone  = document.getElementById('uploadZone');
+const grid  = document.getElementById('previewGrid');
+
+input.addEventListener('change', () => {
+  const files = Array.from(input.files).slice(0, 3);
+  grid.innerHTML = '';
+  if (!files.length) { grid.style.display='none'; return; }
+  grid.style.display = 'grid';
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const wrap = document.createElement('div');
+      wrap.className = 'preview-item';
+      wrap.innerHTML = `<img src="${e.target.result}" alt="preview">`;
+      grid.appendChild(wrap);
+    };
+    reader.readAsDataURL(file);
+  });
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Lost & Found{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-brand" href="{{ url_for('index') }}">
+      <span class="nav-dot"></span> Lost &amp; Found
+    </a>
+    <div class="nav-links">
+      <a href="{{ url_for('browse') }}"      {% if request.endpoint == 'browse'      %}class="active"{% endif %}>Browse</a>
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('report_found') }}" {% if request.endpoint == 'report_found' %}class="active"{% endif %}>Report Found</a>
+        <a href="{{ url_for('search_lost') }}"  {% if request.endpoint == 'search_lost'  %}class="active"{% endif %}>Search Lost</a>
+        <a href="{{ url_for('messages') }}"     {% if request.endpoint == 'messages'     %}class="active"{% endif %}>
+          Messages{% if unread_count %}<span class="nav-badge">{{ unread_count }}</span>{% endif %}
+        </a>
+        {% if current_user.is_admin %}
+          <a href="{{ url_for('admin_dashboard') }}" {% if 'admin' in request.endpoint %}class="active"{% endif %}>Admin</a>
+        {% endif %}
+        <a href="{{ url_for('profile') }}" class="nav-btn">{{ current_user.username }}</a>
+        <a href="{{ url_for('logout') }}"  class="nav-btn">Log out</a>
+      {% else %}
+        <a href="{{ url_for('login') }}"    class="nav-btn">Log in</a>
+        <a href="{{ url_for('register') }}" class="nav-btn primary">Sign up</a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class="flash-list">
+        {% for cat, msg in messages %}
+          <li class="flash {{ cat }}">
+            <span>{{ msg }}</span>
+            <button class="flash-x" onclick="this.parentElement.remove()">✕</button>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+</div>
+
+<script>
+document.querySelectorAll('form').forEach(f => {
+  f.addEventListener('submit', () => {
+    const b = f.querySelector('[type=submit]');
+    if (b) b.classList.add('loading');
+  });
+});
+document.querySelectorAll('.upload-zone').forEach(z => {
+  z.addEventListener('dragover', e => { e.preventDefault(); z.classList.add('drag-over'); });
+  z.addEventListener('dragleave', () => z.classList.remove('drag-over'));
+  z.addEventListener('drop', () => z.classList.remove('drag-over'));
+});
+</script>
+</body>
+</html>

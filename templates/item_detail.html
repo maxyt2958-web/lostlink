@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% block title %}{{ item.item_type }} — Lost & Found{% endblock %}
+{% block content %}
+
+<div class="mb-2">
+  <a href="{{ url_for('browse') }}" class="text-muted text-sm">← Back to Browse</a>
+</div>
+
+<div class="detail-grid">
+  <!-- Images -->
+  <div class="detail-images">
+    {% set imgs = item.all_images %}
+    {% if imgs %}
+      <img id="mainImg" class="detail-main-img"
+           src="{{ url_for('uploaded_file', filename=imgs[0]) }}" alt="{{ item.item_type }}">
+      {% if imgs | length > 1 %}
+        <div class="detail-thumbs">
+          {% for img in imgs %}
+            <img class="detail-thumb {% if loop.first %}active{% endif %}"
+                 src="{{ url_for('uploaded_file', filename=img) }}"
+                 onclick="switchImg(this)" alt="Photo {{ loop.index }}">
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% else %}
+      <div style="height:280px;background:var(--bg);border-radius:var(--r);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:3rem">📦</div>
+    {% endif %}
+  </div>
+
+  <!-- Info -->
+  <div class="detail-info">
+    <div>
+      <span class="detail-badge {{ item.status }}">
+        {% if item.status == 'found' %}✅ Found{% elif item.status == 'claimed' %}🤝 Claimed{% endif %}
+      </span>
+      {% if item.is_flagged %}
+        <span class="badge badge-red" style="margin-left:.4rem">⚑ Flagged</span>
+      {% endif %}
+    </div>
+
+    <div>
+      <h1 style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em">{{ item.item_type }}</h1>
+      <p class="text-muted text-sm mt-1">Reported {{ item.timestamp.strftime('%d %b %Y at %H:%M') }} · {{ item.view_count }} view{{ 's' if item.view_count != 1 }}</p>
+    </div>
+
+    <div class="detail-meta">
+      {% if item.color %}
+        <div class="meta-row"><span class="meta-key">Color</span><span class="meta-val">{{ item.color }}</span></div>
+      {% endif %}
+      {% if item.brand %}
+        <div class="meta-row"><span class="meta-key">Brand</span><span class="meta-val">{{ item.brand }}</span></div>
+      {% endif %}
+      <div class="meta-row"><span class="meta-key">Location</span><span class="meta-val">{{ item.location }}</span></div>
+      {% if item.description %}
+        <div class="meta-row"><span class="meta-key">Notes</span><span class="meta-val">{{ item.description }}</span></div>
+      {% endif %}
+    </div>
+
+    {% if item.ai_description %}
+      <div class="ai-box">
+        <span class="ai-box-label">🤖 AI Description</span>
+        {{ item.ai_description }}
+      </div>
+    {% endif %}
+
+    <!-- Contact / Message -->
+    {% if current_user.is_authenticated and item.user_id != current_user.id %}
+      <div class="contact-box">
+        <div class="contact-label">Contact Finder</div>
+        <div class="contact-val">{{ item.contact_info }}</div>
+        <a href="{{ url_for('send_message', receiver_id=item.owner.id, item_id=item.id) }}"
+           class="btn btn-amber btn-sm mt-2">💬 Send Message</a>
+      </div>
+    {% elif not current_user.is_authenticated %}
+      <div class="contact-box">
+        <div class="contact-label">Want to contact the finder?</div>
+        <a href="{{ url_for('login') }}" class="btn btn-primary btn-sm mt-1">Log in to message</a>
+      </div>
+    {% endif %}
+
+    <!-- Owner actions -->
+    <div class="detail-actions">
+      {% if current_user.is_authenticated and item.user_id == current_user.id %}
+        {% if item.status == 'found' %}
+          <form method="POST" action="{{ url_for('mark_claimed', item_id=item.id) }}"
+                onsubmit="return confirm('Mark this item as claimed?')">
+            <button type="submit" class="btn btn-green btn-sm">🤝 Mark as Claimed</button>
+          </form>
+        {% endif %}
+        <form method="POST" action="{{ url_for('delete_item', item_id=item.id) }}"
+              onsubmit="return confirm('Delete this item permanently?')">
+          <button type="submit" class="btn btn-ghost btn-sm">🗑 Delete</button>
+        </form>
+      {% endif %}
+
+      {% if current_user.is_authenticated and item.user_id != current_user.id %}
+        {% if not already_flagged %}
+          <details style="position:relative">
+            <summary class="btn btn-ghost btn-sm" style="list-style:none;cursor:pointer">⚑ Report</summary>
+            <div style="position:absolute;top:100%;left:0;z-index:50;background:var(--surface);
+                        border:1px solid var(--border);border-radius:var(--r);padding:1rem;
+                        min-width:260px;box-shadow:var(--sh);margin-top:.35rem">
+              <form method="POST" action="{{ url_for('flag_item', item_id=item.id) }}">
+                <div class="field">
+                  <label>Reason</label>
+                  <input type="text" name="reason" placeholder="Spam, fake listing, etc.">
+                </div>
+                <button type="submit" class="btn btn-red btn-sm">Submit Report</button>
+              </form>
+            </div>
+          </details>
+        {% else %}
+          <span class="badge badge-amber">⚑ Reported</span>
+        {% endif %}
+      {% endif %}
+
+      {% if current_user.is_authenticated and current_user.is_admin %}
+        <form method="POST" action="{{ url_for('admin_delete_item', item_id=item.id) }}"
+              onsubmit="return confirm('Admin delete?')">
+          <button type="submit" class="btn btn-red btn-sm">Admin Delete</button>
+        </form>
+        {% if item.is_flagged %}
+          <form method="POST" action="{{ url_for('admin_unflag_item', item_id=item.id) }}">
+            <button type="submit" class="btn btn-ghost btn-sm">Unflag</button>
+          </form>
+        {% endif %}
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+<script>
+function switchImg(thumb) {
+  document.getElementById('mainImg').src = thumb.src;
+  document.querySelectorAll('.detail-thumb').forEach(t => t.classList.remove('active'));
+  thumb.classList.add('active');
+}
+</script>
+
+{% endblock %}

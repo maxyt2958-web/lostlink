@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Search Results{% endblock %}
+{% block content %}
+
+<div class="results-top">
+  <div>
+    <h2>Search Results</h2>
+    <p>{% if matches %}{{ matches|length }} potential match{{ 'es' if matches|length != 1 }} — review carefully before reaching out.{% else %}No matches found for your search.{% endif %}</p>
+  </div>
+  <a href="{{ url_for('search_lost') }}" class="btn btn-ghost btn-sm">🔍 New Search</a>
+</div>
+
+{% if search_description and search_description != 'N/A' and not search_description.startswith('Error:') %}
+  <div class="results-ai-box">
+    <strong>🤖 AI description of your item</strong>
+    {{ search_description }}
+  </div>
+{% endif %}
+
+{% if matches %}
+  <div class="match-grid">
+    {% for match in matches %}
+      <div class="match-card">
+        {% if match.found_item.primary_image %}
+          <img class="match-card-img"
+               src="{{ url_for('uploaded_file', filename=match.found_item.primary_image) }}"
+               alt="{{ match.found_item.item_type }}">
+        {% endif %}
+        <div class="match-card-body">
+          <div class="match-type">{{ match.found_item.item_type }}</div>
+          <div class="match-meta">
+            {% if match.found_item.ai_description %}
+              <div><b>Description</b> {{ match.found_item.ai_description | truncate(100) }}</div>
+            {% endif %}
+            <div><b>Color</b> {{ match.found_item.color or '—' }}</div>
+            <div><b>Brand</b> {{ match.found_item.brand or '—' }}</div>
+            <div><b>Found at</b> {{ match.found_item.location }}</div>
+            <div><b>Reported</b> {{ match.found_item.timestamp.strftime('%d %b %Y') }}</div>
+          </div>
+          <div>
+            <span class="confidence-pill">{{ "%.0f"|format(match.confidence * 100) }}% match</span>
+            <div class="score-pills">
+              <span class="score-pill">Desc {{ "%.2f"|format(match.scores.description) }}</span>
+              <span class="score-pill">Meta {{ "%.2f"|format(match.scores.metadata) }}</span>
+              <span class="score-pill">Img {{ "%.2f"|format(match.scores.image) }}</span>
+            </div>
+          </div>
+          <div class="match-contact">
+            <div class="match-contact-label">Finder's Contact</div>
+            <div class="match-contact-val">{{ match.found_item.contact_info }}</div>
+          </div>
+          <a href="{{ url_for('item_detail', item_id=match.found_item.id) }}"
+             class="btn btn-ghost btn-sm">View Full Details →</a>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="no-results">
+    <div class="no-results-icon">🔎</div>
+    <h3>No strong matches found</h3>
+    <p>We couldn't find a close match right now.</p>
+    <div class="tips">
+      <div class="tip"><span>📷</span><span>Try a clearer or different angle photo.</span></div>
+      <div class="tip"><span>📍</span><span>Broaden the location — e.g. a neighbourhood instead of a specific address.</span></div>
+      <div class="tip"><span>⏰</span><span>Check back later — new items are reported regularly.</span></div>
+    </div>
+  </div>
+{% endif %}
+
+<div class="results-actions">
+  <a href="{{ url_for('search_lost') }}" class="btn btn-primary">🔍 Try Another Search</a>
+  <a href="{{ url_for('browse') }}"      class="btn btn-ghost">Browse All Found Items</a>
+</div>
+
+{% endblock %}

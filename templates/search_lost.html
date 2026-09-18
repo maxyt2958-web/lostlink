@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Search Lost Item{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div class="card-header">
+    <h2>🔍 Search for a Lost Item</h2>
+    <p>Upload a photo of your item — AI will compare it against all found reports.</p>
+  </div>
+  <div class="card-body">
+    <form method="POST" enctype="multipart/form-data" action="{{ url_for('search_lost') }}">
+
+      <div class="field">
+        <label>Item Photo <span class="req">*</span></label>
+        <div class="img-preview-wrap" id="previewWrap" style="display:none;margin-bottom:.75rem">
+          <img id="previewImg" src="" alt="Preview"
+               style="width:100%;max-height:240px;object-fit:contain;border-radius:var(--r);
+                      border:1.5px solid var(--border);background:var(--bg);padding:.5rem">
+        </div>
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="item_image" name="item_image" accept="image/*" required>
+          <div class="upload-icon">🖼️</div>
+          <div class="upload-text">Click or drag &amp; drop your item photo</div>
+          <div class="upload-sub">PNG, JPG, GIF, WebP</div>
+        </div>
+      </div>
+
+      <hr class="divider">
+      <div class="section-label">Item Details</div>
+
+      <div class="field">
+        <label for="item_type">Category <span class="req">*</span></label>
+        <select id="item_type" name="item_type" required>
+          <option value="" disabled selected>Select a category…</option>
+          {% for t in item_types %}
+            <option value="{{ t }}" {% if entered_data.get('item_type') == t %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="color">Color</label>
+          <input type="text" id="color" name="color" placeholder="e.g. Black, Red, Gold" value="{{ entered_data.get('color','') }}">
+        </div>
+        <div class="field">
+          <label for="brand">Brand</label>
+          <input type="text" id="brand" name="brand" placeholder="e.g. Samsung, Fossil" value="{{ entered_data.get('brand','') }}">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="location">Last Known Location <span class="req">*</span></label>
+        <input type="text" id="location" name="location" required
+               placeholder="e.g. Main Street Café, Bus Route 5"
+               value="{{ entered_data.get('location','') }}">
+      </div>
+
+      <button type="submit" class="btn btn-green">Find Matches →</button>
+    </form>
+  </div>
+</div>
+
+<script>
+const input   = document.getElementById('item_image');
+const zone    = document.getElementById('uploadZone');
+const wrap    = document.getElementById('previewWrap');
+const preview = document.getElementById('previewImg');
+
+input.addEventListener('change', () => {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    preview.src = e.target.result;
+    wrap.style.display = 'block';
+    zone.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+});
+</script>
+
+{% endblock %}

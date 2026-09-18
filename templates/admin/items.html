@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Admin — Items{% endblock %}
+{% block content %}
+
+<div class="admin-nav">
+  <a href="{{ url_for('admin_dashboard') }}">Overview</a>
+  <a href="{{ url_for('admin_users') }}">Users</a>
+  <a href="{{ url_for('admin_items') }}" class="active">All Items</a>
+</div>
+
+<div class="section-title">All Items ({{ items.total }})</div>
+<div class="card">
+  <div style="overflow-x:auto">
+    <table class="items-table">
+      <thead>
+        <tr><th>ID</th><th>Photo</th><th>Type</th><th>Owner</th><th>Location</th><th>Status</th><th>Date</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for item in items.items %}
+          <tr>
+            <td class="text-muted">#{{ item.id }}</td>
+            <td>{% if item.primary_image %}<img src="{{ url_for('uploaded_file', filename=item.primary_image) }}" alt="">{% else %}📦{% endif %}</td>
+            <td><a href="{{ url_for('item_detail', item_id=item.id) }}" style="color:var(--accent)">{{ item.item_type }}</a>{% if item.is_flagged %} <span class="badge badge-red">Flagged</span>{% endif %}</td>
+            <td class="text-muted text-sm">{{ item.owner.username }}</td>
+            <td class="text-muted text-sm">{{ item.location | truncate(30) }}</td>
+            <td><span class="badge {% if item.status == 'found' %}badge-blue{% else %}badge-green{% endif %}">{{ item.status }}</span></td>
+            <td class="text-muted text-sm">{{ item.timestamp.strftime('%d %b %Y') }}</td>
+            <td>
+              <form method="POST" action="{{ url_for('admin_delete_item', item_id=item.id) }}"
+                    onsubmit="return confirm('Delete item #{{ item.id }}?')">
+                <button class="btn btn-red btn-sm">Delete</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if items.pages > 1 %}
+  <div class="pagination">
+    <a href="{{ url_for('admin_items', page=items.prev_num) }}" class="page-btn {% if not items.has_prev %}disabled{% endif %}">← Prev</a>
+    {% for p in items.iter_pages() %}
+      {% if p %}<a href="{{ url_for('admin_items', page=p) }}" class="page-btn {% if p == items.page %}active{% endif %}">{{ p }}</a>
+      {% else %}<span class="page-btn disabled">…</span>{% endif %}
+    {% endfor %}
+    <a href="{{ url_for('admin_items', page=items.next_num) }}" class="page-btn {% if not items.has_next %}disabled{% endif %}">Next →</a>
+  </div>
+{% endif %}
+
+{% endblock %}

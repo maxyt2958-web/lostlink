@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+
+<div class="flex justify-between items-center mb-3">
+  <h2 class="font-black" style="font-size:1.35rem">Admin Dashboard</h2>
+</div>
+
+<div class="admin-nav">
+  <a href="{{ url_for('admin_dashboard') }}" class="active">Overview</a>
+  <a href="{{ url_for('admin_users') }}">Users</a>
+  <a href="{{ url_for('admin_items') }}">All Items</a>
+</div>
+
+<div class="admin-stats">
+  <div class="admin-stat blue">
+    <div class="admin-stat-num">{{ total_users }}</div>
+    <div class="admin-stat-label">Total Users</div>
+  </div>
+  <div class="admin-stat green">
+    <div class="admin-stat-num">{{ total_found }}</div>
+    <div class="admin-stat-label">Found Items</div>
+  </div>
+  <div class="admin-stat amber">
+    <div class="admin-stat-num">{{ total_claimed }}</div>
+    <div class="admin-stat-label">Claimed Items</div>
+  </div>
+  <div class="admin-stat red">
+    <div class="admin-stat-num">{{ flagged_items | length }}</div>
+    <div class="admin-stat-label">Flagged Items</div>
+  </div>
+</div>
+
+{% if flagged_items %}
+  <div class="section-title">⚑ Flagged Items</div>
+  <div class="card mb-3">
+    <div style="overflow-x:auto">
+      <table class="items-table">
+        <thead><tr><th>ID</th><th>Type</th><th>Reporter</th><th>Location</th><th>Flags</th><th>Actions</th></tr></thead>
+        <tbody>
+          {% for item in flagged_items %}
+            <tr>
+              <td>#{{ item.id }}</td>
+              <td><a href="{{ url_for('item_detail', item_id=item.id) }}" style="color:var(--accent)">{{ item.item_type }}</a></td>
+              <td>{{ item.owner.username }}</td>
+              <td>{{ item.location | truncate(35) }}</td>
+              <td><span class="badge badge-red">{{ item.flags.count() }}</span></td>
+              <td>
+                <div class="flex gap-1">
+                  <form method="POST" action="{{ url_for('admin_unflag_item', item_id=item.id) }}">
+                    <button class="btn btn-ghost btn-sm">Unflag</button>
+                  </form>
+                  <form method="POST" action="{{ url_for('admin_delete_item', item_id=item.id) }}"
+                        onsubmit="return confirm('Delete item #{{ item.id }}?')">
+                    <button class="btn btn-red btn-sm">Delete</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endif %}
+
+<div class="flex gap-2 flex-wrap" style="align-items:flex-start">
+  <div style="flex:1;min-width:300px">
+    <div class="section-title">Recent Users</div>
+    <div class="card">
+      <table class="items-table">
+        <thead><tr><th>Username</th><th>Email</th><th>Joined</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for u in recent_users %}
+            <tr>
+              <td><strong>{{ u.username }}</strong>{% if u.is_admin %} <span class="badge badge-purple">admin</span>{% endif %}</td>
+              <td class="text-muted text-sm">{{ u.email }}</td>
+              <td class="text-muted text-sm">{{ u.created_at.strftime('%d %b %Y') }}</td>
+              <td>{% if u.is_banned %}<span class="badge badge-red">Banned</span>{% else %}<span class="badge badge-green">Active</span>{% endif %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div style="flex:1;min-width:300px">
+    <div class="section-title">Recent Items</div>
+    <div class="card">
+      <table class="items-table">
+        <thead><tr><th>Type</th><th>User</th><th>Status</th><th>Date</th></tr></thead>
+        <tbody>
+          {% for item in recent_items %}
+            <tr>
+              <td><a href="{{ url_for('item_detail', item_id=item.id) }}" style="color:var(--accent)">{{ item.item_type }}</a></td>
+              <td class="text-muted text-sm">{{ item.owner.username }}</td>
+              <td><span class="badge {% if item.status == 'found' %}badge-blue{% else %}badge-green{% endif %}">{{ item.status }}</span></td>
+              <td class="text-muted text-sm">{{ item.timestamp.strftime('%d %b') }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Lost & Found — AI-Powered{% endblock %}
+{% block content %}
+
+<div class="hero">
+  <div class="hero-pill">✦ AI-Powered Matching</div>
+  <h1>Lost something?<br><span>We'll help you find it.</span></h1>
+  <p>Upload a photo and let our AI match your lost item with found reports — fast, accurate, and free.</p>
+  <div class="hero-actions">
+    {% if current_user.is_authenticated %}
+      <a href="{{ url_for('report_found') }}" class="btn btn-primary btn-lg">📦 Report a Found Item</a>
+      <a href="{{ url_for('search_lost') }}"  class="btn btn-ghost  btn-lg">🔍 Search for My Item</a>
+    {% else %}
+      <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">Get Started Free</a>
+      <a href="{{ url_for('browse') }}"   class="btn btn-ghost   btn-lg">Browse Found Items</a>
+    {% endif %}
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num">{{ total_found }}</div><div class="stat-label">Items Reported</div></div>
+    <div class="stat"><div class="stat-num">{{ total_claimed }}</div><div class="stat-label">Successfully Claimed</div></div>
+    <div class="stat"><div class="stat-num">{{ total_users }}</div><div class="stat-label">Registered Users</div></div>
+  </div>
+</div>
+
+<div class="features">
+  <div class="feature-card">
+    <div class="feature-icon">📸</div>
+    <h3>Multi-Photo Upload</h3>
+    <p>Upload up to 3 photos per item. AI auto-generates a description for better matching accuracy.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">🧠</div>
+    <h3>3-Tier AI Matching</h3>
+    <p>Description similarity, metadata comparison, and visual image matching — all powered by Gemini.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">💬</div>
+    <h3>Private Messaging</h3>
+    <p>Contact finders securely through our internal messaging system — no raw contact info exposed.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">✅</div>
+    <h3>Claim Tracking</h3>
+    <p>Mark items as claimed to close the loop and keep the database clean and up to date.</p>
+  </div>
+</div>
+
+{% if recent %}
+  <div class="mt-4">
+    <div class="flex justify-between items-center mb-2">
+      <div class="section-title">Recently Found Items</div>
+      <a href="{{ url_for('browse') }}" class="btn btn-ghost btn-sm">View all →</a>
+    </div>
+    <div class="item-grid">
+      {% for item in recent %}
+        <a href="{{ url_for('item_detail', item_id=item.id) }}" class="item-card">
+          {% if item.primary_image %}
+            <img src="{{ url_for('uploaded_file', filename=item.primary_image) }}" alt="{{ item.item_type }}">
+          {% endif %}
+          <div class="item-card-body">
+            <div class="item-card-type">{{ item.item_type }}</div>
+            <div class="item-card-loc">📍 {{ item.location | truncate(40) }}</div>
+            <span class="item-card-status status-{{ item.status }}">{{ item.status | capitalize }}</span>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}

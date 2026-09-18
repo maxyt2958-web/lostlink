@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Send Message{% endblock %}
+{% block content %}
+
+<div class="card" style="max-width:560px;margin:0 auto">
+  <div class="card-header">
+    <h2>💬 Message {{ receiver.username }}</h2>
+    {% if item %}
+      <p>Regarding: <strong>{{ item.item_type }}</strong> — {{ item.location }}</p>
+    {% endif %}
+  </div>
+  <div class="card-body">
+    <form method="POST">
+      <div class="field">
+        <label for="body">Your Message <span class="req">*</span></label>
+        <textarea id="body" name="body" rows="5" required placeholder="Hi, I think I might have found your item…"></textarea>
+      </div>
+      <div class="flex gap-1">
+        <button type="submit" class="btn btn-primary">Send Message →</button>
+        <a href="{{ url_for('messages') }}" class="btn btn-ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

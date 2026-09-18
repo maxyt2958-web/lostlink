@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}My Profile{% endblock %}
+{% block content %}
+
+<div class="profile-header">
+  <div class="avatar">{{ current_user.username[0].upper() }}</div>
+  <div>
+    <div class="profile-name">{{ current_user.username }}</div>
+    <div class="profile-email">{{ current_user.email }}</div>
+    <div class="text-xs text-muted mt-1">Member since {{ current_user.created_at.strftime('%B %Y') }}</div>
+  </div>
+  <div style="margin-left:auto">
+    <a href="{{ url_for('report_found') }}" class="btn btn-primary btn-sm">+ Report Found Item</a>
+  </div>
+</div>
+
+<div class="section-title">My Reports ({{ my_items | length }})</div>
+
+{% if my_items %}
+  <div class="card">
+    <div style="overflow-x:auto">
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th>Photo</th>
+            <th>Type</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Views</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in my_items %}
+            <tr>
+              <td>
+                {% if item.primary_image %}
+                  <img src="{{ url_for('uploaded_file', filename=item.primary_image) }}" alt="">
+                {% else %}
+                  📦
+                {% endif %}
+              </td>
+              <td><a href="{{ url_for('item_detail', item_id=item.id) }}" style="color:var(--accent);font-weight:600">{{ item.item_type }}</a></td>
+              <td class="text-muted">{{ item.location | truncate(35) }}</td>
+              <td><span class="badge {% if item.status == 'found' %}badge-blue{% elif item.status == 'claimed' %}badge-green{% endif %}">{{ item.status | capitalize }}</span></td>
+              <td class="text-muted">{{ item.timestamp.strftime('%d %b %Y') }}</td>
+              <td class="text-muted">{{ item.view_count }}</td>
+              <td>
+                <div class="flex gap-1">
+                  {% if item.status == 'found' %}
+                    <form method="POST" action="{{ url_for('mark_claimed', item_id=item.id) }}">
+                      <button class="btn btn-green btn-sm">Claim</button>
+                    </form>
+                  {% endif %}
+                  <form method="POST" action="{{ url_for('delete_item', item_id=item.id) }}"
+                        onsubmit="return confirm('Delete this item?')">
+                    <button class="btn btn-ghost btn-sm">Delete</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% else %}
+  <div class="no-results">
+    <div class="no-results-icon">📭</div>
+    <h3>No reports yet</h3>
+    <p>When you report a found item it will appear here.</p>
+    <a href="{{ url_for('report_found') }}" class="btn btn-primary" style="margin-top:1rem">Report a Found Item</a>
+  </div>
+{% endif %}
+
+{% endblock %}

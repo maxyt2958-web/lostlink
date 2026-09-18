@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Log In — Lost & Found{% endblock %}
+{% block content %}
+
+<div class="auth-wrap">
+  <div class="auth-logo">
+    <h1>Welcome back</h1>
+    <p>Log in to report found items or search for lost ones.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('login') }}">
+        <div class="field">
+          <label for="identifier">Username or Email <span class="req">*</span></label>
+          <input type="text" id="identifier" name="identifier" placeholder="Username or email" required autofocus>
+        </div>
+        <div class="field">
+          <label for="password">Password <span class="req">*</span></label>
+          <input type="password" id="password" name="password" placeholder="Your password" required>
+        </div>
+        <div class="field flex gap-1 items-center" style="margin-bottom:.5rem">
+          <input type="checkbox" id="remember" name="remember" style="width:auto">
+          <label for="remember" style="margin-bottom:0;font-weight:400;font-size:.875rem">Remember me</label>
+        </div>
+        <button type="submit" class="btn btn-primary w-full mt-2">Log In →</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="auth-footer">
+    Don't have an account? <a href="{{ url_for('register') }}">Sign up free</a>
+  </div>
+</div>
+
+{% endblock %}
