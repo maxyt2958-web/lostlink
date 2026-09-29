@@ -60,12 +60,18 @@ limiter = Limiter(get_remote_address, app=app, default_limits=[])
 mail = Mail(app)
 
 # ── Gemini ────────────────────────────────────────────────────────
-try:
-    genai.configure(api_key=GEMINI_TEXT_API_KEY)
-    text_model   = genai.GenerativeModel(GEMINI_MODEL_NAME)
-    vision_model = genai.GenerativeModel(GEMINI_MODEL_NAME)
-except Exception as e:
-    print(f"[WARN] Gemini init failed: {e}")
+gemini_key = GEMINI_TEXT_API_KEY or GEMINI_IMAGE_API_KEY
+if gemini_key:
+    try:
+        genai.configure(api_key=gemini_key)
+        text_model   = genai.GenerativeModel(GEMINI_MODEL_NAME)
+        vision_model = genai.GenerativeModel(GEMINI_MODEL_NAME)
+        print(f"[INFO] Gemini AI models initialized successfully ({GEMINI_MODEL_NAME}).")
+    except Exception as e:
+        print(f"[WARN] Gemini init failed: {e}")
+        text_model = vision_model = None
+else:
+    print("[INFO] No Gemini API key provided. AI description & visual matching will be disabled until added to .env.")
     text_model = vision_model = None
 
 # ── Helpers ───────────────────────────────────────────────────────

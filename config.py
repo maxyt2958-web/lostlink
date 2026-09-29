@@ -4,9 +4,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ── Gemini ────────────────────────────────────────────────────────
-GEMINI_TEXT_API_KEY  = os.environ.get("GEMINI_TEXT_API_KEY", "")
-GEMINI_IMAGE_API_KEY = os.environ.get("GEMINI_IMAGE_API_KEY", "")
-GEMINI_MODEL_NAME    = "gemini-1.5-flash-latest"
+GEMINI_TEXT_API_KEY  = os.environ.get("GEMINI_TEXT_API_KEY") or os.environ.get("GEMINI_API_KEY", "")
+GEMINI_IMAGE_API_KEY = os.environ.get("GEMINI_IMAGE_API_KEY") or os.environ.get("GEMINI_API_KEY", "")
+GEMINI_MODEL_NAME    = os.environ.get("GEMINI_MODEL_NAME", "gemini-2.5-flash")
 
 # ── Flask ─────────────────────────────────────────────────────────
 SECRET_KEY   = os.environ.get("FLASK_SECRET_KEY", os.urandom(32).hex())
